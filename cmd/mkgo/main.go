@@ -67,6 +67,7 @@ func run() error {
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Printf("could not create new project: %v\n", err)
+		fmt.Fprintf(os.Stderr, "could not create new project: %v\n", err)
+		os.Exit(1)
 	}
 }
