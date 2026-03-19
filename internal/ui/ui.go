@@ -10,9 +10,20 @@ import (
 )
 
 func NewForm() (Form, error) {
-	m := &model{}
+	// These variables are shared between the FieldDef closures and the
+	// resulting model. The FieldDef Value/CheckboxValue pointers write
+	// directly into these during TUI interaction, and we copy them into
+	// the returned model afterwards.
+	var (
+		module         string
+		path           string
+		tmpl           string
+		gitRepo        string
+		createMakefile bool
+		initGit        bool
+	)
 
-	modulePrefixes := os.Getenv("GOSPROUT_MODULE_PREFIXES")
+	modulePrefixes := os.Getenv("MKGO_MODULE_PREFIXES")
 	prefixes := []string{}
 	if modulePrefixes != "" {
 		for _, p := range strings.Split(modulePrefixes, ",") {
@@ -37,7 +48,7 @@ func NewForm() (Form, error) {
 				}
 				return nil
 			},
-			Value:                 &m.module,
+			Value:                 &module,
 			DisablePromptRotation: modulePrefixes == "",
 		},
 		{
@@ -47,14 +58,14 @@ func NewForm() (Form, error) {
 			Placeholder:   "projects/my-go-app",
 			Prompts:       []string{"", "~/tmp/"},
 			Focus:         true,
-			Value:         &m.path,
+			Value:         &path,
 			RotationTitle: "path prefix",
 		},
 		{
 			Type:        ListType,
 			Title:       "Template",
 			Description: "Choose a template to quickly set up your project structure",
-			Value:       &m.template,
+			Value:       &tmpl,
 		},
 		{
 			Type:          InputType,
@@ -63,9 +74,9 @@ func NewForm() (Form, error) {
 			RotationTitle: "git prefix",
 			Placeholder:   "github.com/user/repo",
 			Prompts:       []string{"https://", "git@"},
-			Value:         &m.gitRepo,
+			Value:         &gitRepo,
 			Hide: func() bool {
-				return m.template != "Git"
+				return tmpl != "Git"
 			},
 		},
 		{
@@ -75,36 +86,36 @@ func NewForm() (Form, error) {
 				{
 					Type:          CheckboxType,
 					Description:   "Create a Makefile",
-					CheckboxValue: &m.createMakefile,
+					CheckboxValue: &createMakefile,
 				},
 				{
 					Type:          CheckboxType,
 					Description:   "Initialize a git repository",
-					CheckboxValue: &m.initGit,
+					CheckboxValue: &initGit,
 				},
 			},
 			Hide: func() bool {
-				return m.template == "Git"
+				return tmpl == "Git"
 			},
 		},
 	}
 
-	ui, err := CreateForm(fieldDefs)
+	result, err := CreateForm(fieldDefs)
 	if err != nil {
 		return nil, err
 	}
 
-	// Copy the fields into the model for later use
-	if mm, ok := ui.(*model); ok {
-		mm.module = m.module
-		mm.path = m.path
-		mm.template = m.template
-		mm.gitRepo = m.gitRepo
-		mm.createMakefile = m.createMakefile
-		mm.initGit = m.initGit
-		return mm, nil
+	// Copy the values captured by the field pointers into the model.
+	if m, ok := result.(*model); ok {
+		m.module = module
+		m.path = path
+		m.template = tmpl
+		m.gitRepo = gitRepo
+		m.createMakefile = createMakefile
+		m.initGit = initGit
+		return m, nil
 	}
-	return ui, nil
+	return result, nil
 }
 
 func form(fields ...Field) (Form, error) {
@@ -122,8 +133,4 @@ func form(fields ...Field) (Form, error) {
 	}
 
 	return m, nil
-}
-
-type summaryEntry interface {
-	summaryEntry() (string, string)
 }
