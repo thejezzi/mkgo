@@ -2,18 +2,12 @@ package ui
 
 import tea "github.com/charmbracelet/bubbletea"
 
+// Field is the minimal interface for a UI form field. It covers only the
+// methods that the model needs at runtime (rendering, focus management,
+// event handling, and visibility). Builder/configuration methods live on
+// the concrete types instead.
 type Field interface {
 	Hidable
-
-	Title(string) Field
-	Description(string) Field
-	RotationDescription(string) Field
-	Prompt(...string) Field
-	FocusOnStart() Field
-	Value(*string) Field
-	Placeholder(s string) Field
-	Validate(func(string) error) Field
-	DisablePromptRotation() Field
 
 	getTitle() string
 	focus() tea.Cmd

@@ -8,19 +8,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type ListField interface {
-	Field
-
-	SetItems(...list.Item) ListField
-}
-
 type item interface {
 	Title() string
 	Description() string
 	FilterValue() string
 }
 
-func List() ListField {
+func List() *listModel {
 	return newListModel()
 }
 
@@ -42,7 +36,7 @@ func newListModel() *listModel {
 		9,
 	)
 
-	// Remove List Title for seperate rendering of list title
+	// Remove List Title for separate rendering of list title
 	newlist.Title = ""
 	nopaddingNewLine := lipgloss.NewStyle().Padding(0, 0, 1, 0)
 	newlist.Styles.Title = noStyle
@@ -56,7 +50,7 @@ func newListModel() *listModel {
 	newlist.KeyMap.ClearFilter.SetHelp("ctrl+r", "clear filter")
 
 	// remove the quit keymap to prevent the user from unintentionally quitting
-	// the programm and creating a project
+	// the program and creating a project
 	newlist.KeyMap.Quit.Unbind()
 
 	return &listModel{
@@ -65,50 +59,20 @@ func newListModel() *listModel {
 	}
 }
 
-func (lm *listModel) DisablePromptRotation() Field {
-	return lm
-}
-
-func (lm *listModel) Title(s string) Field {
+func (lm *listModel) Title(s string) *listModel {
 	lm.listTitle = s
 	return lm
 }
 
-func (lm *listModel) Description(string) Field {
-	return lm
-}
-
-func (lm *listModel) RotationDescription(string) Field {
-	return lm
-}
-
-func (lm *listModel) Prompt(...string) Field {
-	return lm
-}
-
-func (lm *listModel) FocusOnStart() Field {
-	return lm
-}
-
-func (lm *listModel) Value(outer *string) Field {
+func (lm *listModel) Value(outer *string) *listModel {
 	lm.outerValue = outer
 	return lm
 }
 
-func (lm *listModel) Placeholder(s string) Field {
-	return lm
-}
-
-func (lm *listModel) SetItems(items ...list.Item) ListField {
+func (lm *listModel) SetItems(items ...list.Item) *listModel {
 	lm.inner.SetItems(items)
 	return lm
 }
-
-func (lm *listModel) Validate(func(string) error) Field {
-	return lm
-}
-
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 func (lm *listModel) render() string {
 	if lm.inner == nil {

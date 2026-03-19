@@ -4,11 +4,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type HeaderField interface {
-	Field
-}
-
-func Header() HeaderField {
+func Header() *headerModel {
 	return &headerModel{}
 }
 
@@ -17,40 +13,8 @@ type headerModel struct {
 	hidden func() bool
 }
 
-func (hm *headerModel) Title(s string) Field {
+func (hm *headerModel) Title(s string) *headerModel {
 	hm.title = s
-	return hm
-}
-
-func (hm *headerModel) Description(string) Field {
-	return hm
-}
-
-func (hm *headerModel) RotationDescription(string) Field {
-	return hm
-}
-
-func (hm *headerModel) Prompt(...string) Field {
-	return hm
-}
-
-func (hm *headerModel) FocusOnStart() Field {
-	return hm
-}
-
-func (hm *headerModel) Value(*string) Field {
-	return hm
-}
-
-func (hm *headerModel) Placeholder(s string) Field {
-	return hm
-}
-
-func (hm *headerModel) Validate(func(string) error) Field {
-	return hm
-}
-
-func (hm *headerModel) DisablePromptRotation() Field {
 	return hm
 }
 

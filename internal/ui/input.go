@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func Input() Field {
+func Input() *inputModel {
 	im := newInputModel()
 	return &im
 }
@@ -51,12 +51,12 @@ func newInputModel() inputModel {
 	return im
 }
 
-func (im *inputModel) DisablePromptRotation() Field {
+func (im *inputModel) DisablePromptRotation() *inputModel {
 	im.disablePromptRotation = true
 	return im
 }
 
-func (im *inputModel) Title(s string) Field {
+func (im *inputModel) Title(s string) *inputModel {
 	im.title = s
 	return im
 }
@@ -65,23 +65,23 @@ func (im *inputModel) getTitle() string {
 	return im.title
 }
 
-func (im *inputModel) Description(desc string) Field {
+func (im *inputModel) Description(desc string) *inputModel {
 	im.description = desc
 	return im
 }
 
-func (im *inputModel) RotationDescription(desc string) Field {
+func (im *inputModel) RotationDescription(desc string) *inputModel {
 	im.rotationDescription = desc
 	return im
 }
 
-func (im *inputModel) FocusOnStart() Field {
+func (im *inputModel) FocusOnStart() *inputModel {
 	im.focus()
 	im.SetInnerCursorMode(cursor.CursorHide)
 	return im
 }
 
-func (im *inputModel) Prompt(prompts ...string) Field {
+func (im *inputModel) Prompt(prompts ...string) *inputModel {
 	im.promptList = make([]string, 0)
 	im.promptList = append(im.promptList, prompts...)
 	if len(prompts) > 0 {
@@ -90,7 +90,7 @@ func (im *inputModel) Prompt(prompts ...string) Field {
 	return im
 }
 
-func (im *inputModel) Value(v *string) Field {
+func (im *inputModel) Value(v *string) *inputModel {
 	im.value = v
 	return im
 }
@@ -113,12 +113,12 @@ func (im *inputModel) focus() tea.Cmd {
 	return im.inner.Focus()
 }
 
-func (im *inputModel) Placeholder(p string) Field {
+func (im *inputModel) Placeholder(p string) *inputModel {
 	im.inner.Placeholder = p
 	return im
 }
 
-func (im *inputModel) Validate(f func(string) error) Field {
+func (im *inputModel) Validate(f func(string) error) *inputModel {
 	im.inner.Validate = f
 	return im
 }

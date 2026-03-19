@@ -50,10 +50,10 @@ func createInputField(fd FieldDef) Field {
 }
 
 func createCheckboxField(fd FieldDef) Field {
-	checkbox := Checkbox().(*checkboxModel).
-		SetValue(fd.CheckboxValue)
-	checkbox.Title(fd.Title)
-	checkbox.Description(fd.Description)
+	checkbox := Checkbox().
+		SetValue(fd.CheckboxValue).
+		Title(fd.Title).
+		Description(fd.Description)
 	checkbox.SetHide(fd.Hide)
 	return checkbox
 }
@@ -63,8 +63,8 @@ func createListField(fd FieldDef) Field {
 	for i, t := range template.All {
 		items[i] = t
 	}
-	list := List().SetItems(items...)
-	return list.Title(fd.Title).Value(fd.Value)
+	l := List().SetItems(items...).Title(fd.Title).Value(fd.Value)
+	return l
 }
 
 func buildFields(fieldDefs []FieldDef) []Field {
@@ -99,8 +99,7 @@ func CreateForm(fieldDefs []FieldDef) (Form, error) {
 }
 
 func createHeaderField(fd FieldDef) Field {
-	header := Header()
-	header.Title(fd.Title)
+	header := Header().Title(fd.Title)
 	header.SetHide(fd.Hide)
 	return header
 }

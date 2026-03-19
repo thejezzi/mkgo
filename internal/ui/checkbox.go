@@ -6,11 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type CheckboxField interface {
-	Field
-}
-
-func Checkbox() CheckboxField {
+func Checkbox() *checkboxModel {
 	return newCheckboxModel()
 }
 
@@ -26,48 +22,18 @@ func newCheckboxModel() *checkboxModel {
 	return &checkboxModel{}
 }
 
-func (cm *checkboxModel) Title(s string) Field {
+func (cm *checkboxModel) Title(s string) *checkboxModel {
 	cm.title = s
 	return cm
 }
 
-func (cm *checkboxModel) Description(s string) Field {
+func (cm *checkboxModel) Description(s string) *checkboxModel {
 	cm.description = s
-	return cm
-}
-
-func (cm *checkboxModel) RotationDescription(string) Field {
-	return cm
-}
-
-func (cm *checkboxModel) Prompt(...string) Field {
-	return cm
-}
-
-func (cm *checkboxModel) FocusOnStart() Field {
-	cm.focused = true
-	return cm
-}
-
-func (cm *checkboxModel) Value(v *string) Field {
-	// This is a hack to satisfy the Field interface.
 	return cm
 }
 
 func (cm *checkboxModel) SetValue(v *bool) *checkboxModel {
 	cm.value = v
-	return cm
-}
-
-func (cm *checkboxModel) Placeholder(s string) Field {
-	return cm
-}
-
-func (cm *checkboxModel) Validate(func(string) error) Field {
-	return cm
-}
-
-func (cm *checkboxModel) DisablePromptRotation() Field {
 	return cm
 }
 
