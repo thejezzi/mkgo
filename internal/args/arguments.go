@@ -9,7 +9,7 @@ import (
 var (
 	errModuleNameCannotBeZero = errors.New("module name cannot be empty")
 	errPathCannotBeZero       = errors.New("path cannot be empty")
-	ErrUiMode                 = errors.New("no flags were provided")
+	errUiMode                 = errors.New("no flags were provided")
 )
 
 const _defaultTemplate = "simple"
@@ -83,7 +83,7 @@ func Flags() (*Arguments, error) {
 // validate make sure that all arguments are set to create the project
 func (args *Arguments) validate() (*Arguments, error) {
 	if len(os.Args) < 2 {
-		return nil, ErrUiMode
+		return nil, errUiMode
 	}
 	if len(args.name) == 0 {
 		return nil, errModuleNameCannotBeZero

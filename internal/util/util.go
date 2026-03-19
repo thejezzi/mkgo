@@ -1,14 +1,8 @@
 package util
 
 import (
-	"errors"
 	"math/rand"
 	"os"
-)
-
-var (
-	errNoWordLists      = errors.New("there is no word list to choose from")
-	errNoWordsAvailable = errors.New("no words in random word list")
 )
 
 func ensureEnv(key, defaultValue string) string {

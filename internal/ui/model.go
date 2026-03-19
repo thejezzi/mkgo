@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -9,15 +8,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-type FieldTitle string
-
-const (
-	FieldTitleModule FieldTitle = "module"
-	FieldTitlePath   FieldTitle = "path"
-)
-
-var ErrFieldIsNotAnInputModel = errors.New("field is not an input model")
 
 // Form is the interface for interactive forms, providing summary and line count access.
 type Form interface {
