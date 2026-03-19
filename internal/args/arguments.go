@@ -124,11 +124,5 @@ func (a *Arguments) GitRepo() string      { return a.gitRepo }
 func (a *Arguments) InitGit() bool        { return a.initGit }
 
 func (args Arguments) IsEmpty() bool {
-	if len(args.name) == 0 {
-		return false
-	}
-	if len(args.path) == 0 {
-		return false
-	}
-	return true
+	return len(args.name) == 0 && len(args.path) == 0
 }
