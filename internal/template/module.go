@@ -3,7 +3,6 @@ package template
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -15,6 +14,7 @@ const (
 	_gomodFileName    = "go.mod"
 	_mainGoFileName   = "main.go"
 	_mainTestFileName = "main_test.go"
+	_makefileName     = "Makefile"
 	_mainGoContent    = `package main
 
 import "fmt"
@@ -44,13 +44,31 @@ func dynamicMakefileContent(mainGoRelPath string) string {
 	)
 }
 
+// writeFileAt writes content to dir/filename, creating the directory if needed.
+// If dir already ends with filename, it writes directly to dir instead.
+func writeFileAt(dir, filename string, content []byte) error {
+	dir = filepath.Clean(dir)
+	filePath := filepath.Join(dir, filename)
+	if filepath.Base(dir) == filename {
+		filePath = dir
+	}
+
+	if err := ensureDir(filepath.Dir(filePath)); err != nil {
+		return fmt.Errorf("could not create directory for %s: %w", filename, err)
+	}
+	if err := os.WriteFile(filePath, content, 0o644); err != nil {
+		return fmt.Errorf("failed to write %s: %w", filename, err)
+	}
+	return nil
+}
+
 type gomodData []byte // go.mod file contents
 
 func newGoMod(moduleName string) (gomodData, error) {
 	modFile := &modfile.File{}
 
 	if err := modFile.AddModuleStmt(moduleName); err != nil {
-		return nil, fmt.Errorf("could not add module statement: %v", err)
+		return nil, fmt.Errorf("could not add module statement: %w", err)
 	}
 
 	if err := modFile.AddGoStmt(goVersion()); err != nil {
@@ -65,22 +83,8 @@ func newGoMod(moduleName string) (gomodData, error) {
 	return modData, nil
 }
 
-func (gmd gomodData) WriteToFile(path string) error {
-	cleanedPath := filepath.Clean(path)
-	splitted := strings.Split(cleanedPath, "/")
-	if splitted[len(splitted)-1] != _gomodFileName {
-		splitted = append(splitted, _gomodFileName)
-	}
-	gomodPath := strings.Join(splitted, "/")
-
-	dirPath := filepath.Dir(gomodPath)
-	if err := ensureDir(dirPath); err != nil {
-		return fmt.Errorf("could not create main.go file: %v", err)
-	}
-	if err := os.WriteFile(gomodPath, gmd, 0o644); err != nil {
-		return fmt.Errorf("failed to write go.mod file: %w", err)
-	}
-	return nil
+func (gmd gomodData) WriteToFile(dir string) error {
+	return writeFileAt(dir, _gomodFileName, gmd)
 }
 
 // Options provides the required project creation arguments.
@@ -118,14 +122,20 @@ func CreateNewModuleWithTest(opts Options) error {
 		return err
 	}
 
-	basename := path.Base(opts.Name())
+	basename := filepath.Base(opts.Name())
 	cmdPath := filepath.Join(opts.Path(), "cmd", basename)
 	mainGoPath := filepath.Join(cmdPath, _mainGoFileName)
 	if err := newMainGoAt(mainGoPath); err != nil {
 		return err
 	}
-	if err := newMainTestGo(cmdPath); err != nil {
+	if err := writeFileAt(cmdPath, _mainTestFileName, []byte(_mainTestGoContent)); err != nil {
 		return err
+	}
+
+	if opts.CreateMakefile() {
+		if err := newMakefile(opts.Path()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -146,23 +156,12 @@ func simple(opts Options) error {
 	}
 
 	mainGoPath := filepath.Join(opts.Path(), _mainGoFileName)
-	if err := newMainGoAt(mainGoPath); err != nil {
-		return err
-	}
-
-	return nil
+	return newMainGoAt(mainGoPath)
 }
 
 // newMainGoAt creates a main.go file at the specified absolute path.
-func newMainGoAt(path string) error {
-	dirPath := filepath.Dir(path)
-	if err := ensureDir(dirPath); err != nil {
-		return fmt.Errorf("could not create main.go file: %v", err)
-	}
-	if err := os.WriteFile(path, []byte(_mainGoContent), 0o644); err != nil {
-		return fmt.Errorf("failed to write main.go file: %w", err)
-	}
-	return nil
+func newMainGoAt(absPath string) error {
+	return writeFileAt(filepath.Dir(absPath), filepath.Base(absPath), []byte(_mainGoContent))
 }
 
 // ensureDir creates the directory if it does not exist.
@@ -182,30 +181,9 @@ func goVersion() string {
 	return version
 }
 
-// newMainTestGo creates a main_test.go file in the specified path.
-func newMainTestGo(path string) error {
-	cleanedPath := filepath.Clean(path)
-	splitted := strings.Split(cleanedPath, "/")
-	if splitted[len(splitted)-1] != _mainTestFileName {
-		splitted = append(splitted, _mainTestFileName)
-	}
-	mainTestGoPath := strings.Join(splitted, "/")
-
-	dirPath := filepath.Dir(mainTestGoPath)
-	if err := ensureDir(dirPath); err != nil {
-		return fmt.Errorf("could not create main_test.go file: %v", err)
-	}
-
-	if err := os.WriteFile(mainTestGoPath, []byte(_mainTestGoContent), 0o644); err != nil {
-		return fmt.Errorf("failed to write main_test.go file: %w", err)
-	}
-
-	return nil
-}
-
 // ReplaceModuleName updates the module name in go.mod at the given path.
-func ReplaceModuleName(path, newName string) error {
-	goModPath := filepath.Join(path, _gomodFileName)
+func ReplaceModuleName(dir, newName string) error {
+	goModPath := filepath.Join(dir, _gomodFileName)
 	goModBytes, err := os.ReadFile(goModPath)
 	if err != nil {
 		return fmt.Errorf("could not read go.mod file: %w", err)
@@ -217,7 +195,7 @@ func ReplaceModuleName(path, newName string) error {
 	}
 
 	if err := modFile.AddModuleStmt(newName); err != nil {
-		return fmt.Errorf("could not add module statement: %v", err)
+		return fmt.Errorf("could not set module name: %w", err)
 	}
 
 	modData, err := modFile.Format()
@@ -232,43 +210,21 @@ func ReplaceModuleName(path, newName string) error {
 	return nil
 }
 
-// newMainGo creates a main.go file in the specified path.
-// Deprecated: use newMainGoAt for root main.go creation.
-func newMainGo(path string) error {
-	return newMainGoAt(path)
-}
-
-func newMakefile(path string) error {
-	cleanedPath := filepath.Clean(path)
-	splitted := strings.Split(cleanedPath, "/")
-	if splitted[len(splitted)-1] != "Makefile" {
-		splitted = append(splitted, "Makefile")
-	}
-	makefilePath := strings.Join(splitted, "/")
-
-	dirPath := filepath.Dir(makefilePath)
-	if err := ensureDir(dirPath); err != nil {
-		return fmt.Errorf("could not create Makefile: %v", err)
-	}
-
+func newMakefile(projectPath string) error {
 	// Determine main.go location for Makefile
-	mainGoRelPath := "main.go" // default for simple
-	if _, err := os.Stat(filepath.Join(path, "cmd")); err == nil {
-		// If cmd/<modulename>/main.go exists, use that
-		entries, _ := os.ReadDir(filepath.Join(path, "cmd"))
+	mainGoRelPath := _mainGoFileName // default for simple
+	cmdDir := filepath.Join(projectPath, "cmd")
+	if _, err := os.Stat(cmdDir); err == nil {
+		entries, _ := os.ReadDir(cmdDir)
 		if len(entries) > 0 {
 			modDir := entries[0].Name()
-			candidate := filepath.Join("cmd", modDir, "main.go")
-			if _, err := os.Stat(filepath.Join(path, candidate)); err == nil {
+			candidate := filepath.Join("cmd", modDir, _mainGoFileName)
+			if _, err := os.Stat(filepath.Join(projectPath, candidate)); err == nil {
 				mainGoRelPath = candidate
 			}
 		}
 	}
 	makefileContent := dynamicMakefileContent(mainGoRelPath)
 
-	if err := os.WriteFile(makefilePath, []byte(makefileContent), 0o644); err != nil {
-		return fmt.Errorf("failed to write Makefile: %w", err)
-	}
-
-	return nil
+	return writeFileAt(projectPath, _makefileName, []byte(makefileContent))
 }

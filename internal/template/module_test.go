@@ -28,15 +28,15 @@ func TestWriteGoModToFile(t *testing.T) {
 
 	tmpDir := filepath.Join(
 		os.TempDir(),
-		fmt.Sprintf("gosprout_test_%s", util.RandomString(6)),
+		fmt.Sprintf("mkgo_test_%s", util.RandomString(6)),
 	)
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
 
 	err = gomod.WriteToFile(tmpDir)
 	assert.NoError(t, err)
 	fileInfo, err := os.Stat(filepath.Join(tmpDir, _gomodFileName))
 	assert.NoError(t, err)
 	assert.False(t, fileInfo.IsDir())
-	_ = os.RemoveAll(tmpDir)
 }
 
 func TestGoVersion(t *testing.T) {
@@ -48,12 +48,13 @@ func TestGoVersion(t *testing.T) {
 func TestCreateMainGo(t *testing.T) {
 	tmpDir := filepath.Join(
 		os.TempDir(),
-		fmt.Sprintf("gosprout_test_%s", util.RandomString(6)),
+		fmt.Sprintf("mkgo_test_%s", util.RandomString(6)),
 	)
-	err := newMainGo(filepath.Join(tmpDir, _mainGoFileName))
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+
+	err := newMainGoAt(filepath.Join(tmpDir, _mainGoFileName))
 	assert.NoError(t, err)
 	fileInfo, err := os.Stat(filepath.Join(tmpDir, _mainGoFileName))
 	assert.NoError(t, err)
 	assert.False(t, fileInfo.IsDir())
-	_ = os.RemoveAll(tmpDir)
 }
