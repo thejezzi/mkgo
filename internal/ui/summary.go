@@ -5,13 +5,20 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/thejezzi/mkgo/internal/args"
 )
 
-func SummaryFromArguments(args *args.Arguments) string {
-	projectDir := args.Path()
-	makefile := args.CreateMakefile()
-	tmpl := strings.ToLower(args.Template())
+// SummaryOptions defines the methods needed to generate a post-creation summary.
+type SummaryOptions interface {
+	Path() string
+	Template() string
+	CreateMakefile() bool
+	InitGit() bool
+}
+
+func SummaryFromArguments(opts SummaryOptions) string {
+	projectDir := opts.Path()
+	makefile := opts.CreateMakefile()
+	tmpl := strings.ToLower(opts.Template())
 
 	var steps []string
 	steps = append(steps, helpStep("cd "+projectDir, "Change to your project directory"))
@@ -30,7 +37,7 @@ func SummaryFromArguments(args *args.Arguments) string {
 		)
 	}
 
-	if tmpl == "git" || args.InitGit() {
+	if tmpl == "git" || opts.InitGit() {
 		steps = append(steps, helpStep("git commit -m 'initial'", "Commit your changes"))
 	}
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/thejezzi/mkgo/internal/args"
 	"github.com/thejezzi/mkgo/internal/git"
 )
 
@@ -13,12 +12,12 @@ import (
 type Template struct {
 	Name        string
 	description string
-	Create      func(args *args.Arguments) error
+	Create      func(opts Options) error
 }
 
 func New(
 	name, description string,
-	create func(args *args.Arguments) error,
+	create func(opts Options) error,
 ) Template {
 	return Template{
 		Name:        name,
@@ -33,25 +32,19 @@ func (t Template) FilterValue() string { return t.Name }
 
 // Template creation logic
 
-func simpleCreate(args *args.Arguments) error {
-	err := CreateNewModule(args)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func simpleCreate(opts Options) error {
+	return CreateNewModule(opts)
 }
 
-func testCreate(args *args.Arguments) error {
-	if err := CreateNewModuleWithTest(args); err != nil {
+func testCreate(opts Options) error {
+	if err := CreateNewModuleWithTest(opts); err != nil {
 		return err
 	}
 
-	if args.InitGit() {
+	if opts.InitGit() {
 		cmd := exec.Command("git", "init")
-		cmd.Dir = args.Path()
-		err := cmd.Run()
-		if err != nil {
+		cmd.Dir = opts.Path()
+		if err := cmd.Run(); err != nil {
 			return err
 		}
 	}
@@ -59,17 +52,17 @@ func testCreate(args *args.Arguments) error {
 	return nil
 }
 
-func gitCreate(args *args.Arguments) error {
-	if args.GitRepo() == "" {
+func gitCreate(opts Options) error {
+	if opts.GitRepo() == "" {
 		return fmt.Errorf("git repository URL cannot be empty")
 	}
-	if err := git.Clone(args.GitRepo(), args.Path()); err != nil {
+	if err := git.Clone(opts.GitRepo(), opts.Path()); err != nil {
 		return err
 	}
-	if err := git.Reinit(args.Path()); err != nil {
+	if err := git.Reinit(opts.Path()); err != nil {
 		return err
 	}
-	return ReplaceModuleName(args.Path(), args.Name())
+	return ReplaceModuleName(opts.Path(), opts.Name())
 }
 
 // Template definitions

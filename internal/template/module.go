@@ -88,6 +88,7 @@ type Options interface {
 	Name() string
 	Path() string
 	Template() string
+	GitRepo() string
 	CreateMakefile() bool
 	InitGit() bool
 }
