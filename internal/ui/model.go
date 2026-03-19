@@ -24,7 +24,6 @@ type Form interface {
 type model struct {
 	focusIndex int
 	fields     []Field
-	cursorMode cursor.Mode
 	aborted    bool
 	lineCount  int // dynamically updated line count
 
@@ -195,7 +194,7 @@ func (m *model) updateFields(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-const mainTitle = `
+const _ = `
 ╔═════════════════════════════════════╗
 ║███╗   ███╗██╗  ██╗ ██████╗  ██████╗ ║
 ║████╗ ████║██║ ██╔╝██╔════╝ ██╔═══██╗║

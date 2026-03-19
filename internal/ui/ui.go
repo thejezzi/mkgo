@@ -1,3 +1,4 @@
+// Package ui handles everything ui related in mkgo
 package ui
 
 import (
