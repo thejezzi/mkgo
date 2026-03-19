@@ -115,8 +115,7 @@ func form(fields ...Field) (Form, error) {
 	defer m.Cleanup()
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
-		fmt.Printf("could not start program: %s\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("could not start program: %w", err)
 	}
 	if m.aborted {
 		return m, errors.New("was aborted")
